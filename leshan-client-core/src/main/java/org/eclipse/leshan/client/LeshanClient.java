@@ -32,6 +32,7 @@ import org.eclipse.leshan.client.endpoint.LwM2mClientEndpoint;
 import org.eclipse.leshan.client.endpoint.LwM2mClientEndpointsProvider;
 import org.eclipse.leshan.client.engine.RegistrationEngine;
 import org.eclipse.leshan.client.engine.RegistrationEngineFactory;
+import org.eclipse.leshan.client.notification.NotificationManager;
 import org.eclipse.leshan.client.observer.LwM2mClientObserver;
 import org.eclipse.leshan.client.observer.LwM2mClientObserverAdapter;
 import org.eclipse.leshan.client.observer.LwM2mClientObserverDispatcher;
@@ -80,6 +81,7 @@ public class LeshanClient implements LwM2mClient {
     private final RegistrationEngine engine;
     private final LwM2mClientObserverDispatcher observers;
     private final DataSenderManager dataSenderManager;
+    private final NotificationManager notificationManager;
 
     public LeshanClient(String endpoint, List<? extends LwM2mObjectEnabler> objectEnablers,
             List<DataSender> dataSenders, List<Certificate> trustStore, RegistrationEngineFactory engineFactory,
@@ -118,7 +120,13 @@ public class LeshanClient implements LwM2mClient {
                 engine);
         createRegistrationUpdateHandler(engine, endpointsManager, bootstrapHandler, objectTree, linkFormatHelper);
 
-        endpointsProvider.init(objectTree, requestReceiver, toolbox);
+        notificationManager = createNotificationManager(objectTree, requestReceiver);
+        endpointsProvider.init(objectTree, requestReceiver, notificationManager, toolbox);
+    }
+
+    protected NotificationManager createNotificationManager(LwM2mObjectTree objectTree,
+            DownlinkRequestReceiver requestReceiver) {
+        return new NotificationManager(objectTree, requestReceiver);
     }
 
     protected LwM2mRootEnabler createRootEnabler(LwM2mObjectTree tree) {
